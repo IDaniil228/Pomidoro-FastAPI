@@ -1,6 +1,8 @@
 import redis
 
-def get_redis_connection() -> redis.Redis:
-    return redis.Redis(host='localhost', port=6379)
+from setting import Setting
 
-get_redis_connection().set("Имя", 6)
+
+def get_redis_connection() -> redis.Redis:
+    setting = Setting()
+    return redis.Redis(host=setting.CACHE_HOST, port=setting.CACHE_PORT)
