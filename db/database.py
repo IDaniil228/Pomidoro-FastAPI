@@ -4,10 +4,10 @@ from sqlite3 import connect
 
 from setting import Setting
 
+setting = Setting()
 
 
-
-engine = create_engine("postgresql+psycopg2://hh:1234@localhost:5432/hh")
+engine = create_engine(setting.db_url)
 
 session = sessionmaker(engine)
 
