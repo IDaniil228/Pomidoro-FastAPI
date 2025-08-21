@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from jose import jwt
+from os import access
+
+from jose import jwt, JWTError
 
 from Schema import UserLoginSchema
 from db.accessor import setting
-from exception import UserNotFoundException, WrongPasswordException
+from exception import UserNotFoundException, WrongPasswordException, TokenExpiredException, TokenNotCorrectException
 from models import UserProfile
 from repository import UserRepository
 from setting import Setting
@@ -29,6 +31,16 @@ class AuthService():
         }
         token : str = jwt.encode(data, setting.JWT_SECRET_KEY, setting.JWT_ALGORITHM)
         return token
+
+    @staticmethod
+    def get_used_id_from_access_token(access_token : str) -> int:
+        try:
+            data = jwt.decode(token=access_token, key=setting.JWT_SECRET_KEY, algorithms=[setting.JWT_ALGORITHM])
+        except JWTError:
+            raise TokenNotCorrectException
+        if data["exp"] < datetime.now().timestamp():
+            raise TokenExpiredException
+        return data["user_id"]
 
     @staticmethod
     def _validate_data(user : UserProfile, password : str):

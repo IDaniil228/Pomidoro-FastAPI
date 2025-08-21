@@ -5,12 +5,24 @@ from db import get_db_session
 
 from sqlalchemy.orm import Session
 
-from repository import UserRepository, UsersCacheRepository
+from repository import UserRepository, UsersCacheRepository, TaskRepository
 from service import UserService, AuthService
 
 import redis
 
+from service.TaskService import TaskService
 from setting import Setting
+
+
+def get_task_repository(
+        session : Session = Depends(get_db_session)
+) -> TaskRepository:
+    return TaskRepository(db_session=session)
+
+def get_task_service(
+        task_repository : TaskRepository = Depends(get_task_repository)
+) -> TaskService:
+    return TaskService(task_repository=task_repository)
 
 
 def get_user_repository(db_session: Session = Depends(get_db_session)) -> UserRepository:
@@ -41,6 +53,7 @@ reusable_auth2 = security.HTTPBearer()
 
 def get_request_user_id(
         request : Request,
-        token : security.http.HTTPAuthorizationCredentials = Security(reusable_auth2)
+        token : security.http.HTTPAuthorizationCredentials = Security(reusable_auth2),
+        auth_service : AuthService = Depends(get_auth_service)
 ) -> int:
-    return 1
+    return auth_service.get_used_id_from_access_token(token.credentials)

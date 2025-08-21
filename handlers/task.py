@@ -1,12 +1,25 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+
+from typing import Annotated
+
+from Schema.TaskCreateSchema import TaskCreateSchema
+from dependencies import get_request_user_id, get_task_service
+from service.TaskService import TaskService
 
 router = APIRouter(prefix="/task", tags=["task"])
 
-@router.get("/")
-def ping():
-    return {"massage" : "ok"}
+@router.get("/", response_model=list[TaskCreateSchema])
+def get_tasks(
+        task_service : Annotated[TaskService, Depends(get_task_service)],
+        user_id : int = Depends(get_request_user_id)
+):
+    return task_service.get_tasks(user_id=user_id)
 
 
-@router.post("/create_task")
-def create_task():
-    return {"massage" : "ok"}
+@router.post("/create_task", response_model=TaskCreateSchema)
+def create_task(
+        body : TaskCreateSchema,
+        task_service: Annotated[TaskService, Depends(get_task_service)],
+        user_id: int = Depends(get_request_user_id)
+):
+    return task_service.create_task(body=body, user_id=user_id)

@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from Schema import UserCreateSchema, UserLoginSchema
 from dependencies import get_auth_service
 from exception import UserNotFoundException, WrongPasswordException
-from models import UserProfile
 from service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
