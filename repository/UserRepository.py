@@ -18,11 +18,10 @@ class UserRepository:
             users = session.execute(query).scalars().all()
         return users
 
-    def create_user(self, username : str, password : str, access_token : str) -> UserProfile:
+    def create_user(self, username : str, password : str) -> UserProfile:
         query = insert(UserProfile).values(
             password=password,
             username=username,
-            access_token=access_token
         ).returning(UserProfile.id)
         with self.db_session() as session:
             user_id : int = session.execute(query).scalar()
