@@ -15,6 +15,6 @@ class TaskService:
         task_list = [TaskCreateSchema.model_validate(task) for task in tasks]
         return task_list
 
-    def create_task(self, body : TaskCreateSchema, user_id : int) -> Task:
-        task = self.task_repository.create_task(title=body.title, user_id=user_id)
-        return task
+    def create_task(self, title : str, user_id : int) -> TaskCreateSchema:
+        task = self.task_repository.create_task(title=title, user_id=user_id)
+        return TaskCreateSchema(id=task.id, title=task.title, user_id=user_id)

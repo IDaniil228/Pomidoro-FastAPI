@@ -18,8 +18,8 @@ def get_tasks(
 
 @router.post("/create_task", response_model=TaskCreateSchema)
 def create_task(
-        body : TaskCreateSchema,
+        title : str,
         task_service: Annotated[TaskService, Depends(get_task_service)],
         user_id: int = Depends(get_request_user_id)
 ):
-    return task_service.create_task(body=body, user_id=user_id)
+    return task_service.create_task(title=title, user_id=user_id)

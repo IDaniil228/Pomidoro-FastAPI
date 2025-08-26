@@ -1,4 +1,7 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import RedirectResponse
 
 from Schema import UserCreateSchema, UserLoginSchema
 from dependencies import get_auth_service
@@ -24,3 +27,23 @@ def login(
             status_code=401,
             detail=e.detail
         )
+
+@router.get(
+    "/login/google",
+    response_class=RedirectResponse
+)
+def google_login(
+        auth_service : Annotated[AuthService, Depends(get_auth_service)]
+):
+    redirect_url = auth_service.get_google_redirect_url()
+    print(redirect_url)
+    return RedirectResponse(redirect_url)
+
+@router.get(
+    "/google",
+)
+def google_auth(
+        auth_service : Annotated[AuthService, Depends(get_auth_service)],
+        code : str
+):
+    return auth_service.google_auth(code=code)

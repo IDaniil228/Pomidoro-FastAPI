@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Schema import UserLoginSchema, UserLoginSchema
+from Schema import UserLoginSchema, UserLoginSchema, UserCreateSchema
 from repository import UsersCacheRepository, UserRepository
 from service.AuthService import AuthService
 
@@ -11,14 +11,13 @@ class UserService:
     user_repository: UserRepository
     user_cache_repository: UsersCacheRepository
 
-    def get_users(self) -> list[UserLoginSchema]:
+    def get_users(self) -> list[UserCreateSchema]:
         if users := self.user_cache_repository.get_all_users():
             return users
         else:
             users = self.user_repository.get_all_user()
-            users_scheme_lst = [UserLoginSchema.model_validate(user) for user in users]
-            self.user_cache_repository.set_users(users_scheme_lst)
-            return users
+            users_scheme_lst = [UserCreateSchema.model_validate(user) for user in users]
+            return users_scheme_lst
 
     def create_user(self, username: str, password: str) -> UserLoginSchema:
         user = self.user_repository.create_user(username=username, password=password)
