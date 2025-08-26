@@ -12,7 +12,7 @@ from service import UserService
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/all", response_model=list[UserLoginSchema])
+@router.get("/all", response_model=list[UserCreateSchema])
 def get_users(
         user_service : UserService = Depends(get_users_service)
 ):

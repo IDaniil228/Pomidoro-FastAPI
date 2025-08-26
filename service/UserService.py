@@ -1,31 +1,25 @@
-import string
-
 from dataclasses import dataclass
-from random import choice
 
-from Schema import UserLoginSchema, UserLoginSchema
+from Schema import UserLoginSchema, UserLoginSchema, UserCreateSchema
 from repository import UsersCacheRepository, UserRepository
+from service.AuthService import AuthService
 
 
 @dataclass
 class UserService:
+    auth_service : AuthService
     user_repository: UserRepository
     user_cache_repository: UsersCacheRepository
 
-    def get_users(self) -> list[UserLoginSchema]:
+    def get_users(self) -> list[UserCreateSchema]:
         if users := self.user_cache_repository.get_all_users():
             return users
         else:
             users = self.user_repository.get_all_user()
-            users_scheme_lst = [UserLoginSchema.model_validate(user) for user in users]
-            self.user_cache_repository.set_users(users_scheme_lst)
-            return users
+            users_scheme_lst = [UserCreateSchema.model_validate(user) for user in users]
+            return users_scheme_lst
 
     def create_user(self, username: str, password: str) -> UserLoginSchema:
-        access_token = self._generate_access_token()
-        user = self.user_repository.create_user(username, password, access_token)
+        user = self.user_repository.create_user(username=username, password=password)
+        access_token = AuthService.generate_access_token(user_id=user.id)
         return UserLoginSchema(user_id=user.id, access_token=access_token)
-
-    @staticmethod
-    def _generate_access_token() -> str:
-        return "".join(choice(string.ascii_uppercase + string.digits) for _ in range(10))
