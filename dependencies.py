@@ -1,7 +1,7 @@
 from fastapi import Depends, Request, security, Security, HTTPException
 
 from cache import get_redis_connection
-from client import GoogleClient
+from client import GoogleClient, YandexClient
 from db import get_db_session
 
 from sqlalchemy.orm import Session
@@ -17,9 +17,13 @@ from setting import Setting
 
 
 
-def get_google_client():
+def get_google_client() -> GoogleClient:
     setting = Setting()
     return GoogleClient(setting=setting)
+
+def get_yandex_client() -> YandexClient:
+    setting = Setting()
+    return YandexClient(setting=setting)
 
 def get_task_repository(
         session : Session = Depends(get_db_session)
@@ -41,12 +45,14 @@ def get_users_cache_repository(redis: redis.Redis = Depends(get_redis_connection
 
 def get_auth_service(
         user_repository : UserRepository = Depends(get_user_repository),
-        google_client : GoogleClient = Depends(get_google_client)
+        google_client : GoogleClient = Depends(get_google_client),
+        yandex_client : YandexClient = Depends(get_yandex_client)
 ) -> AuthService:
     setting : Setting = Setting()
     return AuthService(user_repository=user_repository,
                        setting=setting,
-                       google_client=google_client)
+                       google_client=google_client,
+                       yandex_client=yandex_client)
 
 def get_users_service(
     user_repository: UserRepository = Depends(get_user_repository),
