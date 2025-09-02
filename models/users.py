@@ -14,3 +14,4 @@ class UserProfile(Base):
     name: Mapped[Optional[str]]
     email: Mapped[Optional[str]]
     google_access_token : Mapped[Optional[str]]
+    yandex_access_token : Mapped[Optional[str]]

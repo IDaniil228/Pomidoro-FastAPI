@@ -5,7 +5,7 @@ from os import access
 from jose import jwt, JWTError
 
 from Schema import UserLoginSchema, UserCreateSchema
-from client import GoogleClient
+from client import GoogleClient, YandexClient
 from db.accessor import setting
 from exception import UserNotFoundException, WrongPasswordException, TokenExpiredException, TokenNotCorrectException
 from models import UserProfile
@@ -18,6 +18,7 @@ class AuthService:
     user_repository : UserRepository
     setting : Setting
     google_client : GoogleClient
+    yandex_client : YandexClient
 
     def login(self, username : str, password: str) -> UserLoginSchema:
         user = self.user_repository.get_user_by_username(username)
@@ -38,10 +39,30 @@ class AuthService:
         access_token = self.generate_access_token(created_user.id)
         return UserLoginSchema(user_id=created_user.id, access_token=access_token)
 
+    def yandex_auth(self, code: str) -> UserLoginSchema:
+        user_data = self.yandex_client.get_user_data(code=code)
+        print(user_data)
+
+        if user := self.user_repository.get_user_by_email(user_data.email):
+            access_token = self.generate_access_token(user.id)
+            return UserLoginSchema(user_id=user.id, access_token=access_token)
+
+        user_create_schema = UserCreateSchema(**user_data.model_dump())
+        created_user = self.user_repository.create_user(user_create_schema)
+        print(user_data)
+        access_token = self.generate_access_token(created_user.id)
+        return UserLoginSchema(user_id=created_user.id, access_token=access_token)
 
 
     def get_google_redirect_url(self) -> str:
         return self.setting.google_redirect_url
+
+
+    def get_yandex_redirect_url(self) -> str:
+        return self.setting.yandex_redirect_url
+
+
+
 
 
     @staticmethod
