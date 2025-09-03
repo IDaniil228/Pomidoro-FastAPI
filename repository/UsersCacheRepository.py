@@ -2,10 +2,7 @@ import json
 
 from redis import Redis
 
-from Schema import UserCreateSchema
-from Schema.UserLoginSchema import UserLoginSchema
-from cache import get_redis_connection
-
+from Schema import UserCreateSchema, UserLoginSchema
 
 class UsersCacheRepository:
     def __init__(self, redis: Redis):
