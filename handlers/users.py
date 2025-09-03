@@ -1,10 +1,8 @@
 from fastapi import APIRouter, Depends
 
 from Schema import UserCreateSchema
-from Schema.UserLoginSchema import UserLoginSchema
+from Schema import UserLoginSchema
 from dependencies import get_users_service
-
-from fixtures import tasks as fixtures_tasks
 
 from db import get_db_session
 from service import UserService
