@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from sqlalchemy.orm import Session
-from sqlalchemy import insert, values, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import insert, select
 
 from models import Task
 
@@ -9,24 +9,24 @@ from models import Task
 @dataclass
 class TaskRepository:
 
-    db_session : Session
+    db_session : AsyncSession
 
-    def get_all_user_tasks(self, user_id : int) -> list[Task]:
+    async def get_all_user_tasks(self, user_id : int) -> list[Task]:
         query = select(Task).where(Task.user_id==user_id)
-        with self.db_session() as session:
-            return session.execute(query).scalars().all()
+        async with self.db_session as session:
+            return (await session.execute(query)).scalars().all()
 
-    def get_task(self, task_id : int) -> Task | None:
+    async def get_task(self, task_id : int) -> Task | None:
         query = select(Task).where(Task.id==task_id)
-        with self.db_session() as session:
-            return session.execute(query).scalar_one_or_none()
+        async with self.db_session as session:
+            return (await session.execute(query)).scalar_one_or_none()
 
-    def create_task(self, title : str, user_id : int) -> Task:
+    async def create_task(self, title : str, user_id : int) -> Task:
         query = insert(Task).values(
             title=title,
             user_id=user_id
         ).returning(Task.id)
-        with self.db_session() as session:
-            task_id : int = session.execute(query).scalar()
-            session.commit()
-            return self.get_task(task_id=task_id)
+        async with self.db_session as session:
+            task_id : int = (await session.execute(query)).scalar()
+            await session.commit()
+            return await self.get_task(task_id=task_id)

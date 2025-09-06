@@ -20,14 +20,14 @@ class AuthService:
     google_client : GoogleClient
     yandex_client : YandexClient
 
-    def login(self, username : str, password: str) -> UserLoginSchema:
-        user = self.user_repository.get_user_by_username(username)
+    async def login(self, username : str, password: str) -> UserLoginSchema:
+        user = await self.user_repository.get_user_by_username(username)
         AuthService._validate_data(user, password)
         access_token = self.generate_access_token(user_id=user.id)
         return UserLoginSchema(user_id=user.id, access_token=access_token)
 
-    def google_auth(self, code: str) -> UserLoginSchema:
-        user_data = self.google_client.get_user_data(code=code)
+    async def google_auth(self, code: str) -> UserLoginSchema:
+        user_data = await self.google_client.get_user_data(code=code)
 
         if user := self.user_repository.get_user_by_email(user_data.email):
             access_token = self.generate_access_token(user.id)
@@ -39,9 +39,8 @@ class AuthService:
         access_token = self.generate_access_token(created_user.id)
         return UserLoginSchema(user_id=created_user.id, access_token=access_token)
 
-    def yandex_auth(self, code: str) -> UserLoginSchema:
-        user_data = self.yandex_client.get_user_data(code=code)
-        print(user_data)
+    async def yandex_auth(self, code: str) -> UserLoginSchema:
+        user_data = await self.yandex_client.get_user_data(code=code)
 
         if user := self.user_repository.get_user_by_email(user_data.email):
             access_token = self.generate_access_token(user.id)
@@ -49,7 +48,6 @@ class AuthService:
 
         user_create_schema = UserCreateSchema(**user_data.model_dump())
         created_user = self.user_repository.create_user(user_create_schema)
-        print(user_data)
         access_token = self.generate_access_token(created_user.id)
         return UserLoginSchema(user_id=created_user.id, access_token=access_token)
 
@@ -60,9 +58,6 @@ class AuthService:
 
     def get_yandex_redirect_url(self) -> str:
         return self.setting.yandex_redirect_url
-
-
-
 
 
     @staticmethod

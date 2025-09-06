@@ -9,17 +9,17 @@ from service.TaskService import TaskService
 router = APIRouter(prefix="/task", tags=["task"])
 
 @router.get("/", response_model=list[TaskSchema])
-def get_tasks(
+async def get_tasks(
         task_service : Annotated[TaskService, Depends(get_task_service)],
         user_id : int = Depends(get_request_user_id)
 ):
-    return task_service.get_tasks(user_id=user_id)
+    return await task_service.get_tasks(user_id=user_id)
 
 
 @router.post("/create_task", response_model=TaskSchema)
-def create_task(
+async def create_task(
         title : str,
         task_service: Annotated[TaskService, Depends(get_task_service)],
         user_id: int = Depends(get_request_user_id)
 ):
-    return task_service.create_task(title=title, user_id=user_id)
+    return await task_service.create_task(title=title, user_id=user_id)
