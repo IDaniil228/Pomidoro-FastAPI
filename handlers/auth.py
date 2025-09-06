@@ -11,12 +11,13 @@ from service import AuthService
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/", response_model=UserLoginSchema)
-def login(
-        body : UserCreateSchema,
-        auth_service : AuthService = Depends(get_auth_service)
+async def login(
+        username : str,
+        password : str,
+        auth_service : AuthService = Depends(get_auth_service),
 ):
     try:
-        return auth_service.login(body.username, body.password)
+        return await auth_service.login(username=username, password=password)
     except UserNotFoundException as e:
         raise HTTPException(
             status_code=404,
@@ -32,7 +33,7 @@ def login(
     "/login/google",
     response_class=RedirectResponse
 )
-def google_login(
+async def google_login(
         auth_service : Annotated[AuthService, Depends(get_auth_service)]
 ):
     redirect_url = auth_service.get_google_redirect_url()
@@ -42,18 +43,18 @@ def google_login(
 @router.get(
     "/google",
 )
-def google_auth(
+async def google_auth(
         auth_service : Annotated[AuthService, Depends(get_auth_service)],
         code : str
 ):
-    return auth_service.google_auth(code=code)
+    return await auth_service.google_auth(code=code)
 
 
 @router.get(
     "/login/yandex",
     response_class=RedirectResponse
 )
-def yandex_login(
+async def yandex_login(
         auth_service : Annotated[AuthService, Depends(get_auth_service)]
 ):
     redirect_url = auth_service.get_yandex_redirect_url()
@@ -63,8 +64,8 @@ def yandex_login(
 @router.get(
     "/yandex",
 )
-def yandex_auth(
+async def yandex_auth(
         auth_service : Annotated[AuthService, Depends(get_auth_service)],
         code : str
 ):
-    return auth_service.yandex_auth(code=code)
+    return await auth_service.yandex_auth(code=code)

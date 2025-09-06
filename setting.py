@@ -6,7 +6,7 @@ class Setting(BaseSettings):
     DB_PORT : int = 5432
     DB_USER : str = "hh"
     DB_PASSWORD : str = "1234"
-    DB_DRIVER : str = "postgresql+psycopg2"
+    DB_DRIVER : str = "postgresql+asyncpg"
 
     CACHE_HOST : str = "localhost"
     CACHE_PORT : int = 6379

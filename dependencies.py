@@ -1,10 +1,11 @@
+import httpx
 from fastapi import Depends, Request, security, Security, HTTPException
 
 from cache import get_redis_connection
 from client import GoogleClient, YandexClient
 from db import get_db_session
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from exception import TokenExpiredException, TokenNotCorrectException
 from repository import UserRepository, UsersCacheRepository, TaskRepository
@@ -16,34 +17,36 @@ from service.TaskService import TaskService
 from setting import Setting
 
 
+async def get_async_client():
+    return httpx.AsyncClient()
 
-def get_google_client() -> GoogleClient:
+async def get_google_client(async_client : httpx.AsyncClient = Depends(get_async_client)) -> GoogleClient:
     setting = Setting()
-    return GoogleClient(setting=setting)
+    return GoogleClient(setting=setting, async_client=async_client)
 
-def get_yandex_client() -> YandexClient:
+async def get_yandex_client(async_client : httpx.AsyncClient = Depends(get_async_client)) -> YandexClient:
     setting = Setting()
-    return YandexClient(setting=setting)
+    return YandexClient(setting=setting, async_client=async_client)
 
-def get_task_repository(
-        session : Session = Depends(get_db_session)
+async def get_task_repository(
+        session : AsyncSession = Depends(get_db_session)
 ) -> TaskRepository:
     return TaskRepository(db_session=session)
 
-def get_task_service(
+async def get_task_service(
         task_repository : TaskRepository = Depends(get_task_repository)
 ) -> TaskService:
     return TaskService(task_repository=task_repository)
 
 
-def get_user_repository(db_session: Session = Depends(get_db_session)) -> UserRepository:
+async def get_user_repository(db_session: AsyncSession = Depends(get_db_session)) -> UserRepository:
     return UserRepository(db_session=db_session)
 
 
-def get_users_cache_repository(redis: redis.Redis = Depends(get_redis_connection)) -> UsersCacheRepository:
+async def get_users_cache_repository(redis: redis.Redis = Depends(get_redis_connection)) -> UsersCacheRepository:
     return UsersCacheRepository(redis=redis)
 
-def get_auth_service(
+async def get_auth_service(
         user_repository : UserRepository = Depends(get_user_repository),
         google_client : GoogleClient = Depends(get_google_client),
         yandex_client : YandexClient = Depends(get_yandex_client)
@@ -54,7 +57,7 @@ def get_auth_service(
                        google_client=google_client,
                        yandex_client=yandex_client)
 
-def get_users_service(
+async def get_users_service(
     user_repository: UserRepository = Depends(get_user_repository),
     user_cache_repository: UsersCacheRepository = Depends(get_users_cache_repository),
     auth_service: AuthService = Depends(get_auth_service)
@@ -67,7 +70,7 @@ def get_users_service(
 
 reusable_auth2 = security.HTTPBearer()
 
-def get_request_user_id(
+async def get_request_user_id(
         request : Request,
         token : security.http.HTTPAuthorizationCredentials = Security(reusable_auth2),
         auth_service : AuthService = Depends(get_auth_service)
