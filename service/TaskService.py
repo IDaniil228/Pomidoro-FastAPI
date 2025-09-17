@@ -5,6 +5,7 @@ from Schema.task import TaskSchema
 from repository import TaskRepository
 
 
+
 @dataclass
 class TaskService:
 
@@ -18,3 +19,5 @@ class TaskService:
     async def create_task(self, title : str, user_id : int) -> TaskSchema:
         task = await self.task_repository.create_task(title=title, user_id=user_id)
         return TaskSchema(id=task.id, title=task.title, user_id=user_id)
+
+
