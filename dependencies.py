@@ -76,7 +76,7 @@ async def get_request_user_id(
         auth_service : AuthService = Depends(get_auth_service)
 ) -> int:
     try:
-        return auth_service.get_used_id_from_access_token(token.credentials)
+        return auth_service.get_user_id_from_access_token(token.credentials)
     except TokenExpiredException as e:
         raise HTTPException(
             status_code=401,
