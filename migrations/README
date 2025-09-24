@@ -1,3 +1,6 @@
 Generic single-database configuration.
 alembic revision --autogenerate -m "Описание изменений"  - миграция
 alembic upgrade head - применить миграцию
+
+
+celery -A worker.celery worker --loglevel=info

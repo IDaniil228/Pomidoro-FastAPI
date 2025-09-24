@@ -1,10 +1,15 @@
+import smtplib
+import ssl
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 from jose import jwt, JWTError
 
 from Schema import UserLoginSchema, UserCreateSchema
-from client import GoogleClient, YandexClient
+from client import GoogleClient, YandexClient, MailClient
 from db.accessor import setting
 from exception import UserNotFoundException, WrongPasswordException, TokenExpiredException, TokenNotCorrectException
 from models import UserProfile
@@ -18,6 +23,7 @@ class AuthService:
     setting : Setting
     google_client : GoogleClient
     yandex_client : YandexClient
+    mail_client : MailClient
 
     async def login(self, username : str, password: str) -> UserLoginSchema:
         user = await self.user_repository.get_user_by_username(username)
@@ -27,6 +33,7 @@ class AuthService:
 
     async def google_auth(self, code: str) -> UserLoginSchema:
         user_data = await self.google_client.get_user_data(code=code)
+        await self.mail_client.send_welcome_message(to_mail="railtinkoff@gmail.com")
 
         if user := await self.user_repository.get_user_by_email(user_data.email):
             access_token = self.generate_access_token(user.id)
@@ -34,7 +41,6 @@ class AuthService:
 
         user_create_schema = UserCreateSchema(**user_data.model_dump())
         created_user = await self.user_repository.create_user(user_create_schema)
-        print(user_data)
         access_token = self.generate_access_token(created_user.id)
         return UserLoginSchema(user_id=created_user.id, access_token=access_token)
 
@@ -86,3 +92,33 @@ class AuthService:
             raise WrongPasswordException
 
 
+
+
+
+
+
+
+
+
+
+
+def send_welcome_mail(subject: str, text: str, to_mail: str):
+    print("-" * 20)
+    msg = _build_message(subject=subject, text=text, to_mail=to_mail, from_mail=setting.FROM_MAIL)
+    _send_mail(msg=msg)
+
+def _build_message(subject: str, text: str, to_mail: str, from_mail: str) -> MIMEMultipart:
+    msg = MIMEMultipart()
+
+    msg["From"] = from_mail
+    msg["To"] = to_mail
+    msg["Subject"] = subject
+    msg.attach(MIMEText(text, _subtype="plain"))
+    return msg
+
+def _send_mail(msg: MIMEMultipart) -> None:
+    context = ssl.create_default_context()
+    server = smtplib.SMTP_SSL(host=setting.SMTP_HOST, port=setting.SMTP_PORT, context=context)
+    server.login(setting.FROM_MAIL, password=setting.SMTP_PASSWORD)
+    server.send_message(msg)
+    server.quit()
