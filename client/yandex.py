@@ -25,12 +25,10 @@ class YandexClient:
             "client_secret": self.setting.YANDEX_CLIENT_SECRET,
             "grant_type": "authorization_code",
         }
-        print(data, "data")
         response = await self.async_client.post(
                 self.setting.YANDEX_TOKEN_URL,
                 data=data,
                 headers={
                 "Content-Type": "application/x-www-form-urlencoded"
         })
-        print(response, "response")
         return response.json()["access_token"]

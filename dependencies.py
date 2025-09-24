@@ -2,7 +2,7 @@ import httpx
 from fastapi import Depends, Request, security, Security, HTTPException
 
 from cache import get_redis_connection
-from client import GoogleClient, YandexClient
+from client import GoogleClient, YandexClient, MailClient
 from db import get_db_session
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +16,9 @@ import redis
 from service.TaskService import TaskService
 from setting import Setting
 
+
+async def get_mail_client():
+    return MailClient()
 
 async def get_async_client():
     return httpx.AsyncClient()
@@ -49,13 +52,16 @@ async def get_users_cache_repository(redis: redis.Redis = Depends(get_redis_conn
 async def get_auth_service(
         user_repository : UserRepository = Depends(get_user_repository),
         google_client : GoogleClient = Depends(get_google_client),
-        yandex_client : YandexClient = Depends(get_yandex_client)
+        yandex_client : YandexClient = Depends(get_yandex_client),
+        mail_client : MailClient = Depends(get_mail_client)
 ) -> AuthService:
     setting : Setting = Setting()
     return AuthService(user_repository=user_repository,
                        setting=setting,
                        google_client=google_client,
-                       yandex_client=yandex_client)
+                       yandex_client=yandex_client,
+                       mail_client=mail_client
+                       )
 
 async def get_users_service(
     user_repository: UserRepository = Depends(get_user_repository),
